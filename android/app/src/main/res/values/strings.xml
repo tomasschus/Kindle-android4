@@ -10,6 +10,8 @@
     <string name="hint_server_url">https://your-server.example.com</string>
     <string name="label_username">Username</string>
     <string name="label_password">Password</string>
+    <string name="action_show_password">Show</string>
+    <string name="action_hide_password">Hide</string>
     <string name="action_login">Log in</string>
     <string name="error_missing_fields">Enter server URL, username and password</string>
     <string name="error_login_failed">Login failed: %1$s</string>

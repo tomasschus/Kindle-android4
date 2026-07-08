@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
@@ -29,9 +30,11 @@ public class LoginActivity extends AppCompatActivity {
     private EditText editUsername;
     private EditText editPassword;
     private Button btnLogin;
+    private Button btnTogglePassword;
     private ProgressBar progress;
     private TextView textError;
     private Prefs prefs;
+    private boolean passwordVisible;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +46,7 @@ public class LoginActivity extends AppCompatActivity {
         editUsername = (EditText) findViewById(R.id.edit_username);
         editPassword = (EditText) findViewById(R.id.edit_password);
         btnLogin = (Button) findViewById(R.id.btn_login);
+        btnTogglePassword = (Button) findViewById(R.id.btn_toggle_password);
         progress = (ProgressBar) findViewById(R.id.progress_login);
         textError = (TextView) findViewById(R.id.text_error);
 
@@ -52,6 +56,26 @@ public class LoginActivity extends AppCompatActivity {
                 attemptLogin();
             }
         });
+
+        btnTogglePassword.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                togglePasswordVisibility();
+            }
+        });
+    }
+
+    private void togglePasswordVisibility() {
+        passwordVisible = !passwordVisible;
+        int selectionStart = editPassword.getSelectionStart();
+        int selectionEnd = editPassword.getSelectionEnd();
+        editPassword.setInputType(InputType.TYPE_CLASS_TEXT | (passwordVisible
+                ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                : InputType.TYPE_TEXT_VARIATION_PASSWORD));
+        btnTogglePassword.setText(passwordVisible
+                ? R.string.action_hide_password
+                : R.string.action_show_password);
+        editPassword.setSelection(selectionStart, selectionEnd);
     }
 
     @Override
