@@ -196,12 +196,20 @@ export function Dashboard({ username }: { username: string }) {
                     </a>
                   )}
                   {doc.epubStatus === "ready" && (
-                    <a
-                      href={`/api/documents/${doc.id}/epub`}
-                      className="text-sm text-primary underline-offset-2 hover:underline dark:text-blue-300"
-                    >
-                      Ver EPUB
-                    </a>
+                    <>
+                      <a
+                        href={`/dashboard/read/${doc.id}`}
+                        className="text-sm text-primary underline-offset-2 hover:underline dark:text-blue-300"
+                      >
+                        Leer EPUB
+                      </a>
+                      <a
+                        href={`/api/documents/${doc.id}/epub`}
+                        className="text-sm text-primary underline-offset-2 hover:underline dark:text-blue-300"
+                      >
+                        Descargar EPUB
+                      </a>
+                    </>
                   )}
                   {doc.epubStatus === "failed" && (
                     <span className="text-xs text-zinc-400 dark:text-zinc-500" title="No se pudo convertir este PDF a EPUB">
