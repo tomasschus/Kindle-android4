@@ -17,6 +17,7 @@ export async function GET(
       where: { id, ownerId: userId, deletedAt: null },
     });
     if (!doc) return jsonError(404, "not_found");
+    if (!doc.s3Key) return jsonError(404, "pdf_not_available");
 
     const range = request.headers.get("range") ?? undefined;
     const result = await getObjectStream(doc.s3Key, range);

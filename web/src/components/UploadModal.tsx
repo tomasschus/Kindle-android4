@@ -9,13 +9,20 @@ type DocumentDto = {
   sizeBytes: number;
   pageCount: number | null;
   checksum: string;
+  hasPdf: boolean;
   epubStatus: string | null;
   createdAt: string;
   updatedAt: string;
 };
 
-function isPdf(file: File): boolean {
-  return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+function isSupportedBook(file: File): boolean {
+  const name = file.name.toLowerCase();
+  return (
+    file.type === "application/pdf" ||
+    file.type === "application/epub+zip" ||
+    name.endsWith(".pdf") ||
+    name.endsWith(".epub")
+  );
 }
 
 function formatBytes(bytes: number): string {
@@ -32,8 +39,8 @@ function formatBytes(bytes: number): string {
 
 function uploadErrorMessage(code: string): string {
   switch (code) {
-    case "not_a_pdf":
-      return "Ese archivo no es un PDF. Elegí un archivo con extensión .pdf.";
+    case "unsupported_format":
+      return "Ese archivo no es un PDF ni un EPUB. Elegí un archivo con extensión .pdf o .epub.";
     case "missing_file":
       return "No se recibió ningún archivo. Probá de nuevo.";
     case "unauthorized":
@@ -48,7 +55,6 @@ function uploadErrorMessage(code: string): string {
 function uploadWithProgress(
   file: File,
   title: string,
-  convertToEpub: boolean,
   onProgress: (pct: number) => void
 ): Promise<DocumentDto> {
   return new Promise((resolve, reject) => {
@@ -79,7 +85,6 @@ function uploadWithProgress(
     const formData = new FormData();
     formData.append("file", file);
     if (title.trim()) formData.append("title", title.trim());
-    if (convertToEpub) formData.append("convertToEpub", "true");
     xhr.send(formData);
   });
 }
@@ -93,7 +98,6 @@ export function UploadModal({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
-  const [convertToEpub, setConvertToEpub] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -109,13 +113,13 @@ export function UploadModal({
   }, [onClose, uploading]);
 
   const chooseFile = useCallback((f: File) => {
-    if (!isPdf(f)) {
-      setError("Ese archivo no es un PDF. Elegí un archivo con extensión .pdf.");
+    if (!isSupportedBook(f)) {
+      setError("Ese archivo no es un PDF ni un EPUB. Elegí un archivo con extensión .pdf o .epub.");
       return;
     }
     setError(null);
     setFile(f);
-    if (!title.trim()) setTitle(f.name.replace(/\.pdf$/i, ""));
+    if (!title.trim()) setTitle(f.name.replace(/\.(pdf|epub)$/i, ""));
   }, [title]);
 
   function onDrop(e: React.DragEvent) {
@@ -129,13 +133,13 @@ export function UploadModal({
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!file) {
-      setError("Elegí un archivo PDF para subir.");
+      setError("Elegí un archivo PDF o EPUB para subir.");
       return;
     }
     setError(null);
     setProgress(0);
     try {
-      const doc = await uploadWithProgress(file, title, convertToEpub, setProgress);
+      const doc = await uploadWithProgress(file, title, setProgress);
       onUploaded(doc);
     } catch (err) {
       setError(uploadErrorMessage(err instanceof Error ? err.message : "upload_failed"));
@@ -173,11 +177,13 @@ export function UploadModal({
         </div>
 
         <ol className="mt-4 flex flex-col gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
-          <li>1. Arrastrá tu archivo PDF a la zona de abajo, o hacé clic para elegirlo.</li>
+          <li>1. Arrastrá tu archivo PDF o EPUB a la zona de abajo, o hacé clic para elegirlo.</li>
           <li>2. Revisá el título (podés cambiarlo si querés).</li>
-          <li>3. Si querés, marcá &quot;Convertir también a EPUB&quot;.</li>
-          <li>4. Tocá &quot;Subir&quot; y esperá a que termine la barra de progreso.</li>
+          <li>3. Tocá &quot;Subir&quot; y esperá a que termine la barra de progreso.</li>
         </ol>
+        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+          Los PDF se convierten automáticamente a EPUB para poder leerlos de las dos formas.
+        </p>
 
         <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-4">
           <label
@@ -209,7 +215,7 @@ export function UploadModal({
             ) : (
               <>
                 <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                  Arrastrá tu PDF acá
+                  Arrastrá tu PDF o EPUB acá
                 </p>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">o hacé clic para elegirlo desde tu computadora</p>
               </>
@@ -217,7 +223,7 @@ export function UploadModal({
             <input
               ref={fileInputRef}
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,application/epub+zip,.pdf,.epub"
               className="sr-only"
               disabled={uploading}
               onChange={(e) => {
@@ -236,22 +242,6 @@ export function UploadModal({
               placeholder="Se usa el nombre del archivo si lo dejás vacío"
               disabled={uploading}
             />
-          </label>
-
-          <label className="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300">
-            <input
-              type="checkbox"
-              className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary dark:border-zinc-700"
-              checked={convertToEpub}
-              onChange={(e) => setConvertToEpub(e.target.checked)}
-              disabled={uploading}
-            />
-            <span>
-              Convertir también a EPUB
-              <span className="block text-xs text-zinc-500 dark:text-zinc-400">
-                Genera una versión de solo texto, ideal para lectores de e-book.
-              </span>
-            </span>
           </label>
 
           {progress !== null && (

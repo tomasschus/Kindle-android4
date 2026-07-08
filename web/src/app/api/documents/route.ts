@@ -30,24 +30,31 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file");
     const titleField = formData.get("title");
-    const convertToEpub = formData.get("convertToEpub") === "true";
 
     if (!(file instanceof File)) return jsonError(400, "missing_file");
-    if (file.type && file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
-      return jsonError(400, "not_a_pdf");
-    }
+
+    const lowerName = file.name.toLowerCase();
+    const isPdf = file.type === "application/pdf" || lowerName.endsWith(".pdf");
+    const isEpub = file.type === "application/epub+zip" || lowerName.endsWith(".epub");
+    if (!isPdf && !isEpub) return jsonError(400, "unsupported_format");
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const checksum = createHash("sha256").update(buffer).digest("hex");
-    const key = `${userId}/${randomUUID()}.pdf`;
     const title = typeof titleField === "string" && titleField.trim() ? titleField.trim() : file.name;
 
     await ensureBucket();
-    await putObject(key, Readable.from(buffer), "application/pdf");
 
+    let s3Key: string | undefined;
     let epubKey: string | undefined;
     let epubStatus: string | undefined;
-    if (convertToEpub) {
+
+    if (isPdf) {
+      s3Key = `${userId}/${randomUUID()}.pdf`;
+      await putObject(s3Key, Readable.from(buffer), "application/pdf");
+
+      // PDFs are always converted to EPUB too, so the same book can be read
+      // either way; a failed conversion (e.g. scanned/graphic-only PDFs)
+      // just leaves the EPUB side unavailable, it doesn't fail the upload.
       try {
         const epubBuffer = await convertPdfToEpub(buffer, title);
         epubKey = `${userId}/${randomUUID()}.epub`;
@@ -56,6 +63,10 @@ export async function POST(request: NextRequest) {
       } catch {
         epubStatus = "failed";
       }
+    } else {
+      epubKey = `${userId}/${randomUUID()}.epub`;
+      await putObject(epubKey, Readable.from(buffer), "application/epub+zip");
+      epubStatus = "ready";
     }
 
     const document = await prisma.document.create({
@@ -63,7 +74,7 @@ export async function POST(request: NextRequest) {
         ownerId: userId,
         title,
         filename: file.name,
-        s3Key: key,
+        s3Key,
         sizeBytes: buffer.length,
         checksum,
         epubKey,

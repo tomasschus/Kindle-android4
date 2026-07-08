@@ -8,6 +8,7 @@ export function serializeDocument(doc: Document) {
     sizeBytes: doc.sizeBytes,
     pageCount: doc.pageCount,
     checksum: doc.checksum,
+    hasPdf: doc.s3Key != null,
     epubStatus: doc.epubStatus,
     createdAt: doc.createdAt,
     updatedAt: doc.updatedAt,

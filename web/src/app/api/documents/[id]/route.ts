@@ -36,7 +36,7 @@ export async function DELETE(
     });
     if (!doc) return jsonError(404, "not_found");
 
-    await deleteObject(doc.s3Key);
+    if (doc.s3Key) await deleteObject(doc.s3Key);
     if (doc.epubKey) await deleteObject(doc.epubKey);
     await prisma.document.update({
       where: { id: doc.id },

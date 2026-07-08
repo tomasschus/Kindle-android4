@@ -24,7 +24,7 @@ model Document {
   owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   title      String
   filename   String
-  s3Key      String
+  s3Key      String?
   sizeBytes  Int
   pageCount  Int?
   checksum   String

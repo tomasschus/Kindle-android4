@@ -11,6 +11,7 @@ type DocumentDto = {
   sizeBytes: number;
   pageCount: number | null;
   checksum: string;
+  hasPdf: boolean;
   epubStatus: string | null;
   createdAt: string;
   updatedAt: string;
@@ -84,7 +85,7 @@ export function Dashboard({ username }: { username: string }) {
   }
 
   async function onDelete(id: string) {
-    if (!confirm("¿Eliminar este PDF? Esta acción no se puede deshacer.")) return;
+    if (!confirm("¿Eliminar este libro? Esta acción no se puede deshacer.")) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
@@ -156,7 +157,7 @@ export function Dashboard({ username }: { username: string }) {
             </div>
             <p className="font-medium text-zinc-900 dark:text-zinc-50">Todavía no subiste ningún libro</p>
             <p className="max-w-sm text-sm text-zinc-500 dark:text-zinc-400">
-              Los PDFs que subas van a estar disponibles para leer y sincronizar en todos tus dispositivos.
+              Los libros que subas (PDF o EPUB) van a estar disponibles para leer y sincronizar en todos tus dispositivos.
             </p>
             <button
               onClick={() => setModalOpen(true)}
@@ -184,20 +185,22 @@ export function Dashboard({ username }: { username: string }) {
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <a
-                    href={`/api/documents/${doc.id}/download`}
-                    className="text-sm text-primary underline-offset-2 hover:underline dark:text-blue-300"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Ver
-                  </a>
+                  {doc.hasPdf && (
+                    <a
+                      href={`/api/documents/${doc.id}/download`}
+                      className="text-sm text-primary underline-offset-2 hover:underline dark:text-blue-300"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Ver PDF
+                    </a>
+                  )}
                   {doc.epubStatus === "ready" && (
                     <a
                       href={`/api/documents/${doc.id}/epub`}
                       className="text-sm text-primary underline-offset-2 hover:underline dark:text-blue-300"
                     >
-                      EPUB
+                      Ver EPUB
                     </a>
                   )}
                   {doc.epubStatus === "failed" && (

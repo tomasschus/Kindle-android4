@@ -29,36 +29,44 @@ Response 200: `{ "documents": Document[] }`
 Document = {
   id: string
   title: string
-  filename: string          // always the original PDF's filename, even when epubStatus is "ready"
+  filename: string          // the originally uploaded file's name (.pdf or .epub)
   sizeBytes: number
   pageCount: number | null
-  checksum: string          // sha256 hex of the *PDF*, used by Android to skip re-download
+  checksum: string          // sha256 hex of the originally uploaded file
+  hasPdf: boolean           // false for documents uploaded directly as EPUB (no PDF exists)
   epubStatus: "ready" | "failed" | null | undefined
   createdAt: string         // ISO 8601
   updatedAt: string
 }
 ```
 
-Every document is a PDF at upload time; `epubStatus` reflects an optional
-server-side best-effort PDF->EPUB text conversion (see `lib/epub.ts`),
-requested per-upload via `convertToEpub`. The Android app treats
-`epubStatus === "ready"` as "download and read the EPUB instead of the PDF"
-(reflowable WebView reader) and anything else as a normal PDF. `pageCount`
-and `checksum` describe the PDF regardless of `epubStatus` -- Android doesn't
-have a way to detect the EPUB itself changing after the fact, so don't
-regenerate/replace `epubKey` for an existing document id.
+A document can originate from either an uploaded PDF or an uploaded EPUB —
+either way it's a single library entry (`Document` row), not two. PDFs are
+**always** converted server-side to a reflowable EPUB on upload (best-effort
+text extraction, see `lib/epub.ts`); `epubStatus` reflects that conversion's
+outcome (`"ready"` / `"failed"`). EPUBs uploaded directly are stored as-is
+with `epubStatus: "ready"` and `hasPdf: false` — there is no PDF for those
+(no EPUB->PDF conversion). The Android app treats `epubStatus === "ready"` as
+"download and read the EPUB" (reflowable WebView reader) and falls back to
+the PDF otherwise. `pageCount` and `checksum` describe whichever file was
+originally uploaded -- Android doesn't have a way to detect the EPUB itself
+changing after the fact, so don't regenerate/replace `epubKey` for an
+existing document id.
 
 ### POST /api/documents  (multipart/form-data)
-Fields: `file` (the PDF), `title` (string, optional — defaults to filename),
-`convertToEpub` (`"true"` to also generate the EPUB conversion)
+Fields: `file` (a `.pdf` or `.epub` file), `title` (string, optional —
+defaults to filename). PDF uploads are always converted to EPUB; EPUB
+uploads are stored directly. Non-PDF/EPUB files are rejected with
+`unsupported_format`.
 Response 201: `Document`
 
 ### DELETE /api/documents/:id
 Response 204.
 
 ### GET /api/documents/:id/download
-Streams the raw PDF bytes. Supports `Range` requests (needed for large PDFs
-on a slow tablet connection / resuming interrupted downloads).
+Streams the raw PDF bytes. 404s (`pdf_not_available`) when `hasPdf` is
+`false` (EPUB-only document). Supports `Range` requests (needed for large
+PDFs on a slow tablet connection / resuming interrupted downloads).
 Headers: `Content-Type: application/pdf`, `Content-Length`, `Accept-Ranges: bytes`.
 
 ### GET /api/documents/:id/epub
@@ -142,8 +150,9 @@ Android sync algorithm:
 1. Load `lastSyncAt` from local SQLite (null on first run).
 2. `GET /api/sync?since=lastSyncAt`.
 3. Upsert documents into local DB; for any not yet downloaded, queue a
-   background download via `GET /api/documents/:id/download` (compare
-   `checksum` against locally stored one to skip unchanged files).
+   background download — `GET /api/documents/:id/epub` when `epubStatus ===
+   "ready"`, otherwise `GET /api/documents/:id/download` (compare `checksum`
+   against locally stored one to skip unchanged files).
 4. Remove documents in `documentsDeleted` (and their local file + highlights).
 5. Upsert highlights (apply tombstones as deletes); local-only highlights
    created offline are POSTed up first, then merged.

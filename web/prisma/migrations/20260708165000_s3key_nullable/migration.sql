@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Document" ALTER COLUMN "s3Key" DROP NOT NULL;
