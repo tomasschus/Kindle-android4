@@ -1,4 +1,4 @@
-# Kindle Casero — web platform
+# Biblioteca PDF — web platform
 
 Next.js app for uploading PDFs and managing your personal library. Postgres
 (via Prisma) stores metadata/highlights/progress; the PDF bytes themselves

@@ -1,4 +1,4 @@
-# Kindle Reader — Android app
+# Biblioteca PDF — Android app
 
 A native Android e-reader that turns an old ~7" Android 4.x tablet into a
 dedicated PDF reader, syncing documents/highlights/reading-progress from a

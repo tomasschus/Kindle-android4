@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kindle Casero",
-  description: "Sube tus PDFs y léelos en tu tablet convertida en e-reader.",
+  title: "Biblioteca PDF",
+  description: "Plataforma para subir, organizar y sincronizar documentos PDF.",
 };
 
 export default function RootLayout({

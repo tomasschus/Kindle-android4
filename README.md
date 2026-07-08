@@ -1,8 +1,9 @@
-# Kindle Casero
+# Biblioteca PDF
 
-Convierte una tablet Android vieja en un e-reader dedicado: subís tus PDFs
-desde una plataforma web y los leés en la tablet, con sincronización,
-subrayado y modos de lectura (claro / oscuro / escala de grises).
+Plataforma para gestionar una biblioteca de documentos PDF y leerlos desde
+una tablet Android: subís los archivos desde una plataforma web y los leés
+en el dispositivo, con sincronización, subrayado y modos de lectura (claro /
+oscuro / escala de grises).
 
 ## Componentes
 

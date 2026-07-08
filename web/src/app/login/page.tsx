@@ -38,7 +38,7 @@ export default function LoginPage() {
   return (
     <div className="flex flex-1 items-center justify-center bg-blue-50 px-4 dark:bg-slate-950">
       <div className="w-full max-w-sm rounded-2xl border border-blue-100 bg-white p-8 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-        <h1 className="text-2xl font-semibold text-primary dark:text-blue-300">Kindle Casero</h1>
+        <h1 className="text-2xl font-semibold text-primary dark:text-blue-300">Biblioteca PDF</h1>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
           {mode === "login" ? "Inicia sesión para gestionar tus PDFs." : "Crea tu cuenta."}
         </p>
