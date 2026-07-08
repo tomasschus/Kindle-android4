@@ -1,0 +1,64 @@
+apply plugin: 'com.android.application'
+
+android {
+    namespace 'com.kindlereader.app'
+    compileSdkVersion 34
+
+    defaultConfig {
+        applicationId "com.kindlereader.app"
+        // Hard constraint: the target device is a ~7" Android 4.0.3-4.4 tablet.
+        minSdkVersion 15
+        // Deliberately NOT set to a modern value (see android/README.md) -- keeping
+        // targetSdkVersion low avoids modern platform behavior changes (runtime
+        // permissions, scoped storage, background execution limits, mandatory
+        // notification channels, network security config default cleartext block,
+        // etc.) that only make sense for apps distributed to a fleet of current
+        // devices. This app runs on one old, physically-controlled tablet.
+        targetSdkVersion 19
+        versionCode 1
+        versionName "1.0"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        abortOnError false
+        checkReleaseBuilds false
+        disable 'OldTargetApi', 'ExpiredTargetSdkVersion'
+    }
+
+    packagingOptions {
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/NOTICE.txt'
+    }
+}
+
+dependencies {
+    // Support Library (NOT AndroidX) -- see android/README.md for rationale.
+    implementation 'com.android.support:appcompat-v7:28.0.0'
+    // Brings SwipeRefreshLayout, used for pull-to-refresh on the library screen.
+    implementation 'com.android.support:support-v4:28.0.0'
+
+    // PDF rendering, minSdk 11+, based on PdfiumAndroid. Only available via JitPack.
+    implementation 'com.github.barteksc:android-pdf-viewer:3.2.0-beta.1'
+
+    // Networking. Pinned to the last OkHttp 3.12.x release, which is the last
+    // series to support Android API 9+ / Java 7 (OkHttp 3.13+ requires API 21+).
+    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+}

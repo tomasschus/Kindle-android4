@@ -1,0 +1,34 @@
+package com.kindlereader.app.data;
+
+/**
+ * Mirrors the `Document` shape from docs/API.md, plus local-only fields
+ * tracking download state.
+ */
+public class Document {
+
+    public static final String STATUS_NONE = "NONE";
+    public static final String STATUS_QUEUED = "QUEUED";
+    public static final String STATUS_DOWNLOADING = "DOWNLOADING";
+    public static final String STATUS_DOWNLOADED = "DOWNLOADED";
+    public static final String STATUS_FAILED = "FAILED";
+
+    public String id;
+    public String title;
+    public String filename;
+    public long sizeBytes;
+    public Integer pageCount; // null-able, matches API contract
+    public String checksum;
+    public String createdAt;
+    public String updatedAt;
+
+    // Local-only:
+    public String localPath;
+    public String localChecksum;
+    public String downloadStatus = STATUS_NONE;
+    public int downloadProgress; // 0-100
+    public int lastReadPage;
+
+    public boolean isDownloaded() {
+        return STATUS_DOWNLOADED.equals(downloadStatus) && localPath != null;
+    }
+}

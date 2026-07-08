@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Generous touch targets for old, possibly-imprecise touchscreens. -->
+    <dimen name="touch_target_min">56dp</dimen>
+    <dimen name="grid_item_width">220dp</dimen>
+    <dimen name="grid_item_height">160dp</dimen>
+    <dimen name="spacing_small">8dp</dimen>
+    <dimen name="spacing_medium">16dp</dimen>
+    <dimen name="spacing_large">24dp</dimen>
+    <dimen name="text_large">22sp</dimen>
+    <dimen name="text_medium">17sp</dimen>
+    <dimen name="text_small">14sp</dimen>
+    <dimen name="reader_toolbar_height">64dp</dimen>
+</resources>

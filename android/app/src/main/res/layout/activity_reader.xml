@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/reader_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <com.github.barteksc.pdfviewer.PDFView
+            android:id="@+id/pdf_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <com.kindlereader.app.ui.HighlightOverlayView
+            android:id="@+id/highlight_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+    </FrameLayout>
+
+    <!-- Top bar: back + page indicator + highlight-mode hint -->
+    <LinearLayout
+        android:id="@+id/top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/reader_toolbar_bg"
+        android:paddingLeft="@dimen/spacing_small"
+        android:paddingRight="@dimen/spacing_medium"
+        android:minHeight="@dimen/touch_target_min">
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/touch_target_min"
+            android:minHeight="@dimen/touch_target_min"
+            android:background="@android:color/transparent"
+            android:textColor="@color/white"
+            android:text="&#8592;" />
+
+        <TextView
+            android:id="@+id/text_page_indicator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_medium" />
+
+        <TextView
+            android:id="@+id/text_highlight_hint"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/highlight_mode_hint"
+            android:textColor="@color/accent"
+            android:textSize="@dimen/text_small"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <!-- Bottom toolbar: reading mode + highlight + fullscreen -->
+    <LinearLayout
+        android:id="@+id/bottom_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/reader_toolbar_height"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:background="@color/reader_toolbar_bg">
+
+        <ToggleButton
+            android:id="@+id/btn_mode_light"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/mode_light"
+            android:textOff="@string/mode_light"
+            android:checked="true" />
+
+        <ToggleButton
+            android:id="@+id/btn_mode_dark"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/mode_dark"
+            android:textOff="@string/mode_dark" />
+
+        <ToggleButton
+            android:id="@+id/btn_mode_gray"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/mode_gray"
+            android:textOff="@string/mode_gray" />
+
+        <ToggleButton
+            android:id="@+id/btn_highlight"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/action_highlight"
+            android:textOff="@string/action_highlight" />
+
+        <ToggleButton
+            android:id="@+id/btn_fullscreen"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/action_fullscreen"
+            android:textOff="@string/action_fullscreen" />
+
+    </LinearLayout>
+
+</FrameLayout>

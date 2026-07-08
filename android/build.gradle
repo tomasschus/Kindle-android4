@@ -1,0 +1,28 @@
+// Top-level build file for the Kindle Reader Android app.
+//
+// See android/README.md for the rationale behind the AGP/Gradle/support-library
+// version choices used here (targeting minSdk 15 / Android 4.0.3+).
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.5.2'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        // Required for com.github.barteksc:android-pdf-viewer (AndroidPdfViewer / PdfiumAndroid),
+        // which is only published via JitPack.
+        maven { url 'https://jitpack.io' }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.layout.buildDirectory
+}
