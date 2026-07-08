@@ -26,7 +26,6 @@ import org.json.JSONObject;
  */
 public class LoginActivity extends AppCompatActivity {
 
-    private EditText editServerUrl;
     private EditText editUsername;
     private EditText editPassword;
     private Button btnLogin;
@@ -41,17 +40,11 @@ public class LoginActivity extends AppCompatActivity {
 
         prefs = new Prefs(this);
 
-        editServerUrl = (EditText) findViewById(R.id.edit_server_url);
         editUsername = (EditText) findViewById(R.id.edit_username);
         editPassword = (EditText) findViewById(R.id.edit_password);
         btnLogin = (Button) findViewById(R.id.btn_login);
         progress = (ProgressBar) findViewById(R.id.progress_login);
         textError = (TextView) findViewById(R.id.text_error);
-
-        String existingUrl = prefs.getServerUrl();
-        if (!TextUtils.isEmpty(existingUrl)) {
-            editServerUrl.setText(existingUrl);
-        }
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,18 +63,13 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void attemptLogin() {
-        final String serverUrl = editServerUrl.getText().toString().trim();
         final String username = editUsername.getText().toString().trim();
         final String password = editPassword.getText().toString();
 
-        if (TextUtils.isEmpty(serverUrl) || TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
+        if (TextUtils.isEmpty(username) || TextUtils.isEmpty(password)) {
             showError(getString(R.string.error_missing_fields));
             return;
         }
-
-        // Server URL must be usable immediately by ApiClient, so persist it
-        // before making the request.
-        prefs.setServerUrl(serverUrl);
 
         setLoading(true);
         new LoginTask().execute(username, password);

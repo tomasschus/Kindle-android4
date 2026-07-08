@@ -32,22 +32,6 @@
                 style="@style/BigButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/label_server_url"
-                android:textColor="@color/text_secondary" />
-
-            <EditText
-                android:id="@+id/edit_server_url"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/touch_target_min"
-                android:inputType="textUri"
-                android:hint="@string/hint_server_url"
-                android:singleLine="true" />
-
-            <TextView
-                style="@style/BigButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/spacing_medium"
                 android:text="@string/label_username"
                 android:textColor="@color/text_secondary" />
 
