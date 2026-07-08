@@ -7,18 +7,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.kindlereader.app.R;
 import com.kindlereader.app.util.Prefs;
 
-/** Server URL configuration + logout. */
+/** Account info + logout. */
 public class SettingsActivity extends AppCompatActivity {
 
     private Prefs prefs;
-    private EditText editServerUrl;
     private TextView textLoggedInAs;
 
     @Override
@@ -29,29 +26,12 @@ public class SettingsActivity extends AppCompatActivity {
 
         prefs = new Prefs(this);
 
-        editServerUrl = (EditText) findViewById(R.id.edit_server_url);
         textLoggedInAs = (TextView) findViewById(R.id.text_logged_in_as);
-        Button btnSave = (Button) findViewById(R.id.btn_save);
         Button btnLogout = (Button) findViewById(R.id.btn_logout);
 
-        editServerUrl.setText(prefs.getServerUrl());
         String username = prefs.getUsername();
         textLoggedInAs.setText(getString(R.string.label_logged_in_as,
                 TextUtils.isEmpty(username) ? "?" : username));
-
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String url = editServerUrl.getText().toString().trim();
-                if (TextUtils.isEmpty(url)) {
-                    Toast.makeText(SettingsActivity.this, R.string.error_missing_fields, Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                prefs.setServerUrl(url);
-                Toast.makeText(SettingsActivity.this, R.string.action_save, Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        });
 
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override

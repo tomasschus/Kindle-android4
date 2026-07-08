@@ -6,14 +6,12 @@
     <string name="title_reader">Reader</string>
 
     <!-- Login -->
-    <string name="label_server_url">Server URL</string>
-    <string name="hint_server_url">https://your-server.example.com</string>
     <string name="label_username">Username</string>
     <string name="label_password">Password</string>
     <string name="action_show_password">Show</string>
     <string name="action_hide_password">Hide</string>
     <string name="action_login">Log in</string>
-    <string name="error_missing_fields">Enter server URL, username and password</string>
+    <string name="error_missing_fields">Enter username and password</string>
     <string name="error_login_failed">Login failed: %1$s</string>
     <string name="progress_logging_in">Logging in…</string>
 
@@ -32,7 +30,6 @@
     <string name="sync_done">Sync complete</string>
 
     <!-- Settings -->
-    <string name="action_save">Save</string>
     <string name="label_logged_in_as">Logged in as %1$s</string>
     <string name="action_confirm_logout">Log out?</string>
     <string name="action_cancel">Cancel</string>

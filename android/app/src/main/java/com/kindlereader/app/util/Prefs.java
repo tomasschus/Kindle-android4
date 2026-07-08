@@ -16,7 +16,6 @@ public final class Prefs {
     /** Backend deployed on Coolify; see docs/API.md for the contract it implements. */
     private static final String DEFAULT_SERVER_URL = "https://reader.tomasschuster.com";
 
-    private static final String KEY_SERVER_URL = "server_url";
     private static final String KEY_TOKEN = "auth_token";
     private static final String KEY_USER_ID = "user_id";
     private static final String KEY_USERNAME = "username";
@@ -30,17 +29,7 @@ public final class Prefs {
     }
 
     public String getServerUrl() {
-        return prefs.getString(KEY_SERVER_URL, DEFAULT_SERVER_URL);
-    }
-
-    public void setServerUrl(String url) {
-        if (url != null) {
-            // Normalize: strip trailing slash so we can safely concatenate paths.
-            while (url.endsWith("/")) {
-                url = url.substring(0, url.length() - 1);
-            }
-        }
-        prefs.edit().putString(KEY_SERVER_URL, url).apply();
+        return DEFAULT_SERVER_URL;
     }
 
     public String getToken() {
@@ -64,7 +53,7 @@ public final class Prefs {
     }
 
     public boolean isLoggedIn() {
-        return !TextUtils.isEmpty(getToken()) && !TextUtils.isEmpty(getServerUrl());
+        return !TextUtils.isEmpty(getToken());
     }
 
     public void clearSession() {
