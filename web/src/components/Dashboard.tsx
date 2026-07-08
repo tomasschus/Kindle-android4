@@ -11,6 +11,7 @@ type DocumentDto = {
   sizeBytes: number;
   pageCount: number | null;
   checksum: string;
+  epubStatus: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -191,6 +192,19 @@ export function Dashboard({ username }: { username: string }) {
                   >
                     Ver
                   </a>
+                  {doc.epubStatus === "ready" && (
+                    <a
+                      href={`/api/documents/${doc.id}/epub`}
+                      className="text-sm text-primary underline-offset-2 hover:underline dark:text-blue-300"
+                    >
+                      EPUB
+                    </a>
+                  )}
+                  {doc.epubStatus === "failed" && (
+                    <span className="text-xs text-zinc-400 dark:text-zinc-500" title="No se pudo convertir este PDF a EPUB">
+                      EPUB no disponible
+                    </span>
+                  )}
                   <button
                     onClick={() => onDelete(doc.id)}
                     disabled={deletingId === doc.id}

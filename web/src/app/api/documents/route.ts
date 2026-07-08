@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { ensureBucket, putObject } from "@/lib/storage";
 import { AuthError, jsonError, requireUserId } from "@/lib/http";
 import { serializeDocument } from "@/lib/serialize";
+import { convertPdfToEpub } from "@/lib/epub";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file");
     const titleField = formData.get("title");
+    const convertToEpub = formData.get("convertToEpub") === "true";
 
     if (!(file instanceof File)) return jsonError(400, "missing_file");
     if (file.type && file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
@@ -38,18 +40,34 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const checksum = createHash("sha256").update(buffer).digest("hex");
     const key = `${userId}/${randomUUID()}.pdf`;
+    const title = typeof titleField === "string" && titleField.trim() ? titleField.trim() : file.name;
 
     await ensureBucket();
     await putObject(key, Readable.from(buffer), "application/pdf");
 
+    let epubKey: string | undefined;
+    let epubStatus: string | undefined;
+    if (convertToEpub) {
+      try {
+        const epubBuffer = await convertPdfToEpub(buffer, title);
+        epubKey = `${userId}/${randomUUID()}.epub`;
+        await putObject(epubKey, Readable.from(epubBuffer), "application/epub+zip");
+        epubStatus = "ready";
+      } catch {
+        epubStatus = "failed";
+      }
+    }
+
     const document = await prisma.document.create({
       data: {
         ownerId: userId,
-        title: typeof titleField === "string" && titleField.trim() ? titleField.trim() : file.name,
+        title,
         filename: file.name,
         s3Key: key,
         sizeBytes: buffer.length,
         checksum,
+        epubKey,
+        epubStatus,
       },
     });
 

@@ -9,6 +9,7 @@ type DocumentDto = {
   sizeBytes: number;
   pageCount: number | null;
   checksum: string;
+  epubStatus: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -44,7 +45,12 @@ function uploadErrorMessage(code: string): string {
   }
 }
 
-function uploadWithProgress(file: File, title: string, onProgress: (pct: number) => void): Promise<DocumentDto> {
+function uploadWithProgress(
+  file: File,
+  title: string,
+  convertToEpub: boolean,
+  onProgress: (pct: number) => void
+): Promise<DocumentDto> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", "/api/documents");
@@ -73,6 +79,7 @@ function uploadWithProgress(file: File, title: string, onProgress: (pct: number)
     const formData = new FormData();
     formData.append("file", file);
     if (title.trim()) formData.append("title", title.trim());
+    if (convertToEpub) formData.append("convertToEpub", "true");
     xhr.send(formData);
   });
 }
@@ -86,6 +93,7 @@ export function UploadModal({
 }) {
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
+  const [convertToEpub, setConvertToEpub] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -127,7 +135,7 @@ export function UploadModal({
     setError(null);
     setProgress(0);
     try {
-      const doc = await uploadWithProgress(file, title, setProgress);
+      const doc = await uploadWithProgress(file, title, convertToEpub, setProgress);
       onUploaded(doc);
     } catch (err) {
       setError(uploadErrorMessage(err instanceof Error ? err.message : "upload_failed"));
@@ -167,7 +175,8 @@ export function UploadModal({
         <ol className="mt-4 flex flex-col gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
           <li>1. Arrastrá tu archivo PDF a la zona de abajo, o hacé clic para elegirlo.</li>
           <li>2. Revisá el título (podés cambiarlo si querés).</li>
-          <li>3. Tocá &quot;Subir&quot; y esperá a que termine la barra de progreso.</li>
+          <li>3. Si querés, marcá &quot;Convertir también a EPUB&quot;.</li>
+          <li>4. Tocá &quot;Subir&quot; y esperá a que termine la barra de progreso.</li>
         </ol>
 
         <form onSubmit={onSubmit} className="mt-4 flex flex-col gap-4">
@@ -229,6 +238,22 @@ export function UploadModal({
             />
           </label>
 
+          <label className="flex items-start gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+            <input
+              type="checkbox"
+              className="mt-0.5 h-4 w-4 rounded border-zinc-300 text-primary focus:ring-primary dark:border-zinc-700"
+              checked={convertToEpub}
+              onChange={(e) => setConvertToEpub(e.target.checked)}
+              disabled={uploading}
+            />
+            <span>
+              Convertir también a EPUB
+              <span className="block text-xs text-zinc-500 dark:text-zinc-400">
+                Genera una versión de solo texto, ideal para lectores de e-book.
+              </span>
+            </span>
+          </label>
+
           {progress !== null && (
             <div className="flex flex-col gap-1">
               <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-200 dark:bg-slate-800">
@@ -237,7 +262,9 @@ export function UploadModal({
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400">Subiendo… {progress}%</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                {progress < 100 ? `Subiendo… ${progress}%` : "Procesando…"}
+              </p>
             </div>
           )}
 
@@ -257,7 +284,7 @@ export function UploadModal({
               disabled={uploading || !file}
               className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
             >
-              {uploading ? `Subiendo… ${progress}%` : "Subir"}
+              {progress !== null ? (progress < 100 ? `Subiendo… ${progress}%` : "Procesando…") : "Subir"}
             </button>
           </div>
         </form>

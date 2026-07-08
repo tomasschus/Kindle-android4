@@ -28,6 +28,8 @@ model Document {
   sizeBytes  Int
   pageCount  Int?
   checksum   String
+  epubKey    String?
+  epubStatus String?
   deletedAt  DateTime?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
