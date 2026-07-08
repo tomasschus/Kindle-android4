@@ -137,7 +137,8 @@ public class SyncManager {
                     db.hardDeleteHighlight(h.id);
                 } else if (h.isLocalOnly()) {
                     JSONObject created = api.createHighlight(h.documentId, h.page,
-                            HighlightRect.listToJsonString(h.rects), h.color, h.note);
+                            HighlightRect.listToJsonString(h.rects), h.color, h.note,
+                            h.anchorQuote, h.anchorPrefix, h.anchorSuffix);
                     String serverId = created.optString("id", null);
                     if (serverId != null) {
                         db.replaceHighlightId(h.id, serverId);
@@ -219,6 +220,9 @@ public class SyncManager {
             h.documentId = o.optString("documentId");
             h.page = o.optInt("page", 0);
             h.rects = HighlightRect.listFromJsonArray(o.optJSONArray("rects"));
+            h.anchorQuote = o.isNull("anchorQuote") ? null : o.optString("anchorQuote", null);
+            h.anchorPrefix = o.isNull("anchorPrefix") ? null : o.optString("anchorPrefix", null);
+            h.anchorSuffix = o.isNull("anchorSuffix") ? null : o.optString("anchorSuffix", null);
             h.color = o.optString("color", "#FFEB3B");
             h.note = o.isNull("note") ? null : o.optString("note", null);
             h.createdAt = o.optString("createdAt", null);

@@ -17,7 +17,7 @@ import java.util.List;
 public class DbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "kindlereader.db";
-    private static final int DB_VERSION = 3;
+    private static final int DB_VERSION = 4;
 
     private static final String T_DOCUMENTS = "documents";
     private static final String T_HIGHLIGHTS = "highlights";
@@ -62,6 +62,9 @@ public class DbHelper extends SQLiteOpenHelper {
                 "document_id TEXT," +
                 "page INTEGER," +
                 "rects TEXT," +
+                "anchor_quote TEXT," +
+                "anchor_prefix TEXT," +
+                "anchor_suffix TEXT," +
                 "color TEXT," +
                 "note TEXT," +
                 "created_at TEXT," +
@@ -91,6 +94,11 @@ public class DbHelper extends SQLiteOpenHelper {
         }
         if (oldVersion < 3) {
             db.execSQL("ALTER TABLE " + T_DOCUMENTS + " ADD COLUMN has_pdf INTEGER DEFAULT 1");
+        }
+        if (oldVersion < 4) {
+            db.execSQL("ALTER TABLE " + T_HIGHLIGHTS + " ADD COLUMN anchor_quote TEXT");
+            db.execSQL("ALTER TABLE " + T_HIGHLIGHTS + " ADD COLUMN anchor_prefix TEXT");
+            db.execSQL("ALTER TABLE " + T_HIGHLIGHTS + " ADD COLUMN anchor_suffix TEXT");
         }
     }
 
@@ -292,6 +300,9 @@ public class DbHelper extends SQLiteOpenHelper {
         cv.put("document_id", h.documentId);
         cv.put("page", h.page);
         cv.put("rects", HighlightRect.listToJsonString(h.rects));
+        cv.put("anchor_quote", h.anchorQuote);
+        cv.put("anchor_prefix", h.anchorPrefix);
+        cv.put("anchor_suffix", h.anchorSuffix);
         cv.put("color", h.color);
         cv.put("note", h.note);
         cv.put("created_at", h.createdAt);
@@ -307,6 +318,9 @@ public class DbHelper extends SQLiteOpenHelper {
         h.documentId = c.getString(c.getColumnIndexOrThrow("document_id"));
         h.page = c.getInt(c.getColumnIndexOrThrow("page"));
         h.rects = HighlightRect.listFromJsonString(c.getString(c.getColumnIndexOrThrow("rects")));
+        h.anchorQuote = c.getString(c.getColumnIndexOrThrow("anchor_quote"));
+        h.anchorPrefix = c.getString(c.getColumnIndexOrThrow("anchor_prefix"));
+        h.anchorSuffix = c.getString(c.getColumnIndexOrThrow("anchor_suffix"));
         h.color = c.getString(c.getColumnIndexOrThrow("color"));
         h.note = c.getString(c.getColumnIndexOrThrow("note"));
         h.createdAt = c.getString(c.getColumnIndexOrThrow("created_at"));

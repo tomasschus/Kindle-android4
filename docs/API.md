@@ -77,22 +77,38 @@ Headers: `Content-Type: application/epub+zip`, `Content-Length`.
 
 ## Highlights
 
-Highlights are stored as one or more normalized rectangles per page
-(normalized to 0..1 of page width/height so they survive different render
-resolutions). PDF-only for now -- the Android EPUB reader doesn't create
-highlights (rectangle coordinates don't mean anything on reflowable text).
+Two different anchoring schemes share this one table/endpoint set, depending
+on whether the highlight was made on the fixed-layout PDF or the reflowable
+EPUB. Exactly one of `rects` (non-empty) or `anchorQuote` (non-null) is set
+per highlight -- never both.
+
+- **PDF** (`rects` non-empty, `anchorQuote` null): one or more rectangles per
+  page, normalized to 0..1 of page width/height so they survive different
+  render resolutions. `page` is the 0-indexed PDF page.
+- **EPUB** (`anchorQuote` non-null, `rects` empty `[]`): a
+  [TextQuoteSelector](https://www.w3.org/TR/annotation-model/#text-quote-selector)
+  -style anchor -- the exact highlighted text (`anchorQuote`) plus ~30
+  characters of raw text-node context immediately before/after it
+  (`anchorPrefix`/`anchorSuffix`), used by the Android app to re-find and
+  re-wrap the highlight in a `<mark>` each time the chapter reloads. `page`
+  is the 0-indexed EPUB spine/chapter index, not a real page number.
+  Re-anchoring is best-effort: the web platform doesn't need to validate or
+  interpret these fields, just store/return them as opaque strings.
 
 ```
 Highlight = {
   id: string
   documentId: string
-  page: number             // 0-indexed
-  rects: { x: number, y: number, w: number, h: number }[]
-  color: string             // "#RRGGBB"
+  page: number                      // PDF page, or EPUB chapter/spine index
+  rects: { x: number, y: number, w: number, h: number }[]  // [] for EPUB
+  anchorQuote: string | null         // EPUB only
+  anchorPrefix: string | null        // EPUB only
+  anchorSuffix: string | null        // EPUB only
+  color: string                      // "#RRGGBB"
   note: string | null
   createdAt: string
   updatedAt: string
-  deleted: boolean          // tombstone for sync
+  deleted: boolean                   // tombstone for sync
 }
 ```
 
@@ -100,11 +116,14 @@ Highlight = {
 Response 200: `{ "highlights": Highlight[] }`
 
 ### POST /api/documents/:id/highlights
-Request: `{ page, rects, color, note? }`
+Request: `{ page, rects, color, note?, anchorQuote?, anchorPrefix?, anchorSuffix? }`
+`rects` is always sent (possibly `[]`); `anchorQuote`/`anchorPrefix`/
+`anchorSuffix` are only present for EPUB highlights.
 Response 201: `Highlight`
 
 ### PUT /api/highlights/:id
-Request: partial `{ rects?, color?, note? }`
+Request: partial `{ rects?, color?, note? }` (Android never updates the
+anchor fields after creation)
 Response 200: `Highlight`
 
 ### DELETE /api/highlights/:id

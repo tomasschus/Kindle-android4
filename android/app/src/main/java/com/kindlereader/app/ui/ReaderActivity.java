@@ -37,6 +37,7 @@ import com.kindlereader.app.net.ApiException;
 import com.kindlereader.app.net.SyncManager;
 import com.kindlereader.app.util.ColorModeHelper;
 import com.kindlereader.app.util.FullscreenHelper;
+import com.kindlereader.app.util.HighlightColors;
 import com.kindlereader.app.util.IsoDate;
 import com.kindlereader.app.util.Prefs;
 
@@ -58,8 +59,6 @@ public class ReaderActivity extends AppCompatActivity {
 
     public static final String EXTRA_DOCUMENT_ID = "document_id";
 
-    private static final String[] HIGHLIGHT_COLOR_NAMES = {"Yellow", "Green", "Blue", "Pink"};
-    private static final String[] HIGHLIGHT_COLOR_HEX = {"#FFEB3B", "#8BC34A", "#64B5F6", "#F48FB1"};
     private static final long PROGRESS_SAVE_DEBOUNCE_MS = 800L;
 
     private PDFView pdfView;
@@ -388,10 +387,10 @@ public class ReaderActivity extends AppCompatActivity {
     private void promptHighlightColor(final int page, final double nx, final double ny, final double nw, final double nh) {
         new AlertDialog.Builder(this)
                 .setTitle(R.string.action_pick_color)
-                .setItems(HIGHLIGHT_COLOR_NAMES, new android.content.DialogInterface.OnClickListener() {
+                .setItems(HighlightColors.NAMES, new android.content.DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(android.content.DialogInterface dialog, int which) {
-                        createHighlight(page, nx, ny, nw, nh, HIGHLIGHT_COLOR_HEX[which]);
+                        createHighlight(page, nx, ny, nw, nh, HighlightColors.HEX[which]);
                     }
                 })
                 .setNegativeButton(R.string.action_cancel, null)

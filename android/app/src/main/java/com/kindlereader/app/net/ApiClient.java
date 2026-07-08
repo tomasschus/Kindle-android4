@@ -275,8 +275,13 @@ public class ApiClient {
     // Highlights
     // ------------------------------------------------------------------
 
-    public JSONObject createHighlight(String documentId, int page, String rectsJsonArray, String color, String note)
-            throws ApiException {
+    /**
+     * {@code anchorQuote}/{@code anchorPrefix}/{@code anchorSuffix} are for
+     * EPUB (text-anchored) highlights only -- pass null for PDF ones, where
+     * {@code rectsJsonArray} carries the real page rects instead.
+     */
+    public JSONObject createHighlight(String documentId, int page, String rectsJsonArray, String color, String note,
+            String anchorQuote, String anchorPrefix, String anchorSuffix) throws ApiException {
         try {
             JSONObject body = new JSONObject();
             body.put("page", page);
@@ -284,6 +289,11 @@ public class ApiClient {
             body.put("color", color);
             if (note != null) {
                 body.put("note", note);
+            }
+            if (anchorQuote != null) {
+                body.put("anchorQuote", anchorQuote);
+                body.put("anchorPrefix", anchorPrefix);
+                body.put("anchorSuffix", anchorSuffix);
             }
             Request req = authedRequest("/api/documents/" + documentId + "/highlights")
                     .post(RequestBody.create(JSON, body.toString()))
