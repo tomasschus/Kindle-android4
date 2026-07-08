@@ -1,5 +1,6 @@
 package com.kindlereader.app.ui;
 
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -67,6 +68,7 @@ public class ReaderActivity extends AppCompatActivity {
     private View bottomToolbar;
     private TextView pageIndicator;
     private TextView highlightHint;
+    private Button btnSwitchFormat;
     private ToggleButton btnModeLight, btnModeDark, btnModeGray, btnHighlight, btnFullscreen;
 
     private DbHelper db;
@@ -117,11 +119,19 @@ public class ReaderActivity extends AppCompatActivity {
         btnHighlight = (ToggleButton) findViewById(R.id.btn_highlight);
         btnFullscreen = (ToggleButton) findViewById(R.id.btn_fullscreen);
         Button btnBack = (Button) findViewById(R.id.btn_back);
+        btnSwitchFormat = (Button) findViewById(R.id.btn_switch_format);
 
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
+            }
+        });
+
+        btnSwitchFormat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switchToEpub();
             }
         });
 
@@ -191,6 +201,7 @@ public class ReaderActivity extends AppCompatActivity {
                 return;
             }
             document = result.document;
+            btnSwitchFormat.setVisibility(document.isEpub() ? View.VISIBLE : View.GONE);
             highlightsByPage.clear();
             for (int i = 0; i < result.highlights.size(); i++) {
                 Highlight h = result.highlights.get(i);
@@ -536,5 +547,41 @@ public class ReaderActivity extends AppCompatActivity {
         }
         db.setLocalProgress(document.id, page, IsoDate.nowIso(), true);
         db.updateLastReadPage(document.id, page);
+    }
+
+    // ------------------------------------------------------------------
+    // Format switching (PDF <-> EPUB, when the server has both)
+    // ------------------------------------------------------------------
+
+    private void switchToEpub() {
+        if (document == null) {
+            return;
+        }
+        btnSwitchFormat.setEnabled(false);
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                try {
+                    syncManager.ensureEpubDownloaded(document);
+                    return null;
+                } catch (Exception e) {
+                    return String.valueOf(e.getMessage());
+                }
+            }
+
+            @Override
+            protected void onPostExecute(String error) {
+                btnSwitchFormat.setEnabled(true);
+                if (error != null) {
+                    Toast.makeText(ReaderActivity.this,
+                            getString(R.string.error_switch_format, error), Toast.LENGTH_LONG).show();
+                    return;
+                }
+                Intent intent = new Intent(ReaderActivity.this, EpubReaderActivity.class);
+                intent.putExtra(EpubReaderActivity.EXTRA_DOCUMENT_ID, document.id);
+                startActivity(intent);
+                finish();
+            }
+        }.execute();
     }
 }

@@ -21,6 +21,12 @@ public final class Prefs {
     private static final String KEY_USERNAME = "username";
     private static final String KEY_LAST_SYNC_AT = "last_sync_at";
     private static final String KEY_READER_MODE = "reader_mode";
+    private static final String KEY_EPUB_FONT_SIZE = "epub_font_size";
+
+    public static final int EPUB_FONT_SIZE_MIN = 14;
+    public static final int EPUB_FONT_SIZE_MAX = 32;
+    public static final int EPUB_FONT_SIZE_DEFAULT = 20;
+    public static final int EPUB_FONT_SIZE_STEP = 2;
 
     private final SharedPreferences prefs;
 
@@ -74,5 +80,14 @@ public final class Prefs {
 
     public void setReaderMode(int mode) {
         prefs.edit().putInt(KEY_READER_MODE, mode).apply();
+    }
+
+    public int getEpubFontSize() {
+        return prefs.getInt(KEY_EPUB_FONT_SIZE, EPUB_FONT_SIZE_DEFAULT);
+    }
+
+    public void setEpubFontSize(int sizeSp) {
+        int clamped = Math.max(EPUB_FONT_SIZE_MIN, Math.min(EPUB_FONT_SIZE_MAX, sizeSp));
+        prefs.edit().putInt(KEY_EPUB_FONT_SIZE, clamped).apply();
     }
 }

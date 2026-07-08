@@ -44,6 +44,18 @@
             android:textColor="@color/white"
             android:text="&#8592;" />
 
+        <Button
+            android:id="@+id/btn_switch_format"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/touch_target_min"
+            android:minHeight="@dimen/touch_target_min"
+            android:background="@android:color/transparent"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_small"
+            android:text="@string/action_view_as_epub"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/text_page_indicator"
             android:layout_width="0dp"

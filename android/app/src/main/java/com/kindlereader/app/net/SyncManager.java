@@ -180,6 +180,7 @@ public class SyncManager {
             d.pageCount = o.isNull("pageCount") ? null : Integer.valueOf(o.optInt("pageCount"));
             d.checksum = o.optString("checksum", "");
             d.epubStatus = o.isNull("epubStatus") ? null : o.optString("epubStatus", null);
+            d.hasPdf = o.optBoolean("hasPdf", true);
             d.createdAt = o.optString("createdAt", null);
             d.updatedAt = o.optString("updatedAt", null);
             db.upsertDocument(d);
@@ -264,8 +265,7 @@ public class SyncManager {
 
     private void downloadOne(final Document d, final SyncListener listener) {
         db.updateDownloadState(d.id, Document.STATUS_DOWNLOADING, 0, null, null);
-        File dir = new File(appContext.getFilesDir(), "documents");
-        final File dest = new File(dir, d.id + (d.isEpub() ? ".epub" : ".pdf"));
+        final File dest = d.isEpub() ? epubFile(d.id) : pdfFile(d.id);
         try {
             ApiClient.DownloadProgressListener progressListener = new ApiClient.DownloadProgressListener() {
                 @Override
@@ -304,8 +304,49 @@ public class SyncManager {
         }
     }
 
+    private File documentsDir() {
+        return new File(appContext.getFilesDir(), "documents");
+    }
+
+    private File pdfFile(String documentId) {
+        return new File(documentsDir(), documentId + ".pdf");
+    }
+
+    private File epubFile(String documentId) {
+        return new File(documentsDir(), documentId + ".epub");
+    }
+
     private File epubExtractDir(String documentId) {
-        return new File(new File(appContext.getFilesDir(), "documents"), documentId + "_epub");
+        return new File(documentsDir(), documentId + "_epub");
+    }
+
+    /**
+     * On-demand download of the PDF for a document whose primary (synced)
+     * format is EPUB, used by the "switch to PDF view" action in the reader.
+     * No-op if it's already there. Must be called off the main thread.
+     */
+    public File ensurePdfDownloaded(Document d) throws ApiException {
+        File dest = pdfFile(d.id);
+        if (!dest.exists()) {
+            api.downloadDocument(d.id, dest, 0, null);
+        }
+        return dest;
+    }
+
+    /**
+     * On-demand download+extraction of the EPUB for a document whose primary
+     * (synced) format is PDF, used by the "switch to EPUB view" action in the
+     * reader. No-op if it's already there. Must be called off the main thread.
+     */
+    public File ensureEpubDownloaded(Document d) throws ApiException, java.io.IOException {
+        File extractDir = epubExtractDir(d.id);
+        String[] existing = extractDir.list();
+        if (existing == null || existing.length == 0) {
+            File dest = epubFile(d.id);
+            api.downloadEpub(d.id, dest, 0, null);
+            EpubParser.extract(dest, extractDir);
+        }
+        return extractDir;
     }
 
     private void notifyDownloaded(final SyncListener listener, final String id, final boolean success) {

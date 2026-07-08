@@ -48,4 +48,10 @@
     <string name="highlight_mode_hint">Drag on the page to draw a highlight</string>
     <string name="action_delete_highlight">Delete highlight</string>
     <string name="action_pick_color">Highlight color</string>
+    <string name="action_view_as_pdf">PDF</string>
+    <string name="action_view_as_epub">EPUB</string>
+    <string name="action_font_smaller">A-</string>
+    <string name="action_font_bigger">A+</string>
+    <string name="error_switch_format">Could not load that format: %1$s</string>
+    <string name="progress_switching_format">Loading…</string>
 </resources>

@@ -34,6 +34,18 @@
             android:text="&#8592;" />
 
         <Button
+            android:id="@+id/btn_switch_format"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/touch_target_min"
+            android:minHeight="@dimen/touch_target_min"
+            android:background="@android:color/transparent"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_small"
+            android:text="@string/action_view_as_pdf"
+            android:visibility="gone" />
+
+        <Button
             android:id="@+id/btn_prev_chapter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -64,7 +76,7 @@
 
     </LinearLayout>
 
-    <!-- Bottom toolbar: reading mode + fullscreen (no highlighting for EPUB in v1) -->
+    <!-- Bottom toolbar: font size + reading mode + fullscreen (no highlighting for EPUB in v1) -->
     <LinearLayout
         android:id="@+id/bottom_toolbar"
         android:layout_width="match_parent"
@@ -72,6 +84,16 @@
         android:layout_gravity="bottom"
         android:orientation="horizontal"
         android:background="@color/reader_toolbar_bg">
+
+        <Button
+            android:id="@+id/btn_font_smaller"
+            style="@style/ToolbarIconButton"
+            android:text="@string/action_font_smaller" />
+
+        <Button
+            android:id="@+id/btn_font_bigger"
+            style="@style/ToolbarIconButton"
+            android:text="@string/action_font_bigger" />
 
         <ToggleButton
             android:id="@+id/btn_mode_light"

@@ -1,5 +1,6 @@
 package com.kindlereader.app.ui;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -56,6 +57,7 @@ public class EpubReaderActivity extends AppCompatActivity {
     private View topBar;
     private View bottomToolbar;
     private TextView pageIndicator;
+    private Button btnSwitchFormat;
     private ToggleButton btnModeLight, btnModeDark, btnModeGray, btnFullscreen;
 
     private DbHelper db;
@@ -102,8 +104,14 @@ public class EpubReaderActivity extends AppCompatActivity {
         Button btnBack = (Button) findViewById(R.id.btn_back);
         Button btnPrevChapter = (Button) findViewById(R.id.btn_prev_chapter);
         Button btnNextChapter = (Button) findViewById(R.id.btn_next_chapter);
+        btnSwitchFormat = (Button) findViewById(R.id.btn_switch_format);
+        Button btnFontSmaller = (Button) findViewById(R.id.btn_font_smaller);
+        Button btnFontBigger = (Button) findViewById(R.id.btn_font_bigger);
 
         webView.getSettings().setDefaultTextEncodingName("UTF-8");
+        // Needed for the font-size / reading-mode CSS injection below --
+        // javascript: URLs are silently a no-op without this.
+        webView.getSettings().setJavaScriptEnabled(true);
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public void onPageFinished(WebView view, String url) {
@@ -144,6 +152,24 @@ public class EpubReaderActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 loadChapter(currentChapter + 1);
+            }
+        });
+        btnSwitchFormat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                switchToPdf();
+            }
+        });
+        btnFontSmaller.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                adjustFontSize(-Prefs.EPUB_FONT_SIZE_STEP);
+            }
+        });
+        btnFontBigger.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                adjustFontSize(Prefs.EPUB_FONT_SIZE_STEP);
             }
         });
 
@@ -209,6 +235,7 @@ public class EpubReaderActivity extends AppCompatActivity {
             }
             document = result.document;
             chapters = result.book.chapters;
+            btnSwitchFormat.setVisibility(document.hasPdf ? View.VISIBLE : View.GONE);
 
             ColorModeHelper.apply(webView, prefs.getReaderMode());
             syncModeButtons(prefs.getReaderMode());
@@ -249,14 +276,24 @@ public class EpubReaderActivity extends AppCompatActivity {
                 currentChapter + 1, Math.max(chapters.size(), 1)));
     }
 
-    /** Base typography so chapters read like a proper reflowable e-book, not a bare web page. */
+    /**
+     * Base typography so chapters read like a proper reflowable e-book, not a
+     * bare web page. Uses a fixed element id so {@link #adjustFontSize} can
+     * update the current chapter's font size in place, without reloading it.
+     */
     private void injectReadableStyle(WebView view) {
+        int fontSize = prefs.getEpubFontSize();
         view.loadUrl("javascript:(function(){"
-                + "var s=document.createElement('style');"
-                + "s.innerHTML='body{font-family:serif;font-size:20px;line-height:1.5;"
+                + "var s=document.getElementById('kr-style');"
+                + "if(!s){s=document.createElement('style');s.id='kr-style';document.head.appendChild(s);}"
+                + "s.innerHTML='body{font-family:serif;font-size:" + fontSize + "px;line-height:1.5;"
                 + "margin:20px;max-width:100%;} img{max-width:100%;height:auto;}';"
-                + "document.head.appendChild(s);"
                 + "})()");
+    }
+
+    private void adjustFontSize(int deltaSp) {
+        prefs.setEpubFontSize(prefs.getEpubFontSize() + deltaSp);
+        injectReadableStyle(webView);
     }
 
     // ------------------------------------------------------------------
@@ -320,5 +357,41 @@ public class EpubReaderActivity extends AppCompatActivity {
         }
         db.setLocalProgress(document.id, chapter, IsoDate.nowIso(), true);
         db.updateLastReadPage(document.id, chapter);
+    }
+
+    // ------------------------------------------------------------------
+    // Format switching (PDF <-> EPUB, when the server has both)
+    // ------------------------------------------------------------------
+
+    private void switchToPdf() {
+        if (document == null) {
+            return;
+        }
+        btnSwitchFormat.setEnabled(false);
+        new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                try {
+                    syncManager.ensurePdfDownloaded(document);
+                    return null;
+                } catch (Exception e) {
+                    return String.valueOf(e.getMessage());
+                }
+            }
+
+            @Override
+            protected void onPostExecute(String error) {
+                btnSwitchFormat.setEnabled(true);
+                if (error != null) {
+                    Toast.makeText(EpubReaderActivity.this,
+                            getString(R.string.error_switch_format, error), Toast.LENGTH_LONG).show();
+                    return;
+                }
+                Intent intent = new Intent(EpubReaderActivity.this, ReaderActivity.class);
+                intent.putExtra(ReaderActivity.EXTRA_DOCUMENT_ID, document.id);
+                startActivity(intent);
+                finish();
+            }
+        }.execute();
     }
 }

@@ -19,6 +19,7 @@ public class Document {
     public Integer pageCount; // null-able, matches API contract
     public String checksum;
     public String epubStatus; // "ready" | "failed" | null -- server-side PDF->EPUB conversion state
+    public boolean hasPdf = true; // false only for documents uploaded directly as EPUB
     public String createdAt;
     public String updatedAt;
 
