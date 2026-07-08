@@ -13,6 +13,9 @@ public final class Prefs {
 
     private static final String FILE = "kindle_reader_prefs";
 
+    /** Backend deployed on Coolify; see docs/API.md for the contract it implements. */
+    private static final String DEFAULT_SERVER_URL = "https://reader.tomasschuster.com";
+
     private static final String KEY_SERVER_URL = "server_url";
     private static final String KEY_TOKEN = "auth_token";
     private static final String KEY_USER_ID = "user_id";
@@ -27,7 +30,7 @@ public final class Prefs {
     }
 
     public String getServerUrl() {
-        return prefs.getString(KEY_SERVER_URL, "");
+        return prefs.getString(KEY_SERVER_URL, DEFAULT_SERVER_URL);
     }
 
     public void setServerUrl(String url) {
