@@ -9,6 +9,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -30,7 +31,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText editUsername;
     private EditText editPassword;
     private Button btnLogin;
-    private Button btnTogglePassword;
+    private ImageButton btnTogglePassword;
     private ProgressBar progress;
     private TextView textError;
     private Prefs prefs;
@@ -46,9 +47,15 @@ public class LoginActivity extends AppCompatActivity {
         editUsername = (EditText) findViewById(R.id.edit_username);
         editPassword = (EditText) findViewById(R.id.edit_password);
         btnLogin = (Button) findViewById(R.id.btn_login);
-        btnTogglePassword = (Button) findViewById(R.id.btn_toggle_password);
+        btnTogglePassword = (ImageButton) findViewById(R.id.btn_toggle_password);
         progress = (ProgressBar) findViewById(R.id.progress_login);
         textError = (TextView) findViewById(R.id.text_error);
+
+        // Set via code, not android:src in the layout: on pre-21 devices the
+        // framework ImageView constructor resolves android:src itself before
+        // AppCompat's vector-drawable-compat can intercept it, crashing on
+        // inflate. setImageResource() goes through the compat path instead.
+        btnTogglePassword.setImageResource(R.drawable.ic_eye);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,9 +79,10 @@ public class LoginActivity extends AppCompatActivity {
         editPassword.setInputType(InputType.TYPE_CLASS_TEXT | (passwordVisible
                 ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                 : InputType.TYPE_TEXT_VARIATION_PASSWORD));
-        btnTogglePassword.setText(passwordVisible
+        btnTogglePassword.setImageResource(passwordVisible ? R.drawable.ic_eye_off : R.drawable.ic_eye);
+        btnTogglePassword.setContentDescription(getString(passwordVisible
                 ? R.string.action_hide_password
-                : R.string.action_show_password);
+                : R.string.action_show_password));
         editPassword.setSelection(selectionStart, selectionEnd);
     }
 

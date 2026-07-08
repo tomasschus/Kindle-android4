@@ -17,6 +17,9 @@ android {
         targetSdkVersion 19
         versionCode 1
         versionName "1.0"
+
+        // Needed for vector drawables (the login eye icon) to render below API 21.
+        vectorDrawables.useSupportLibrary = true
     }
 
     buildTypes {
