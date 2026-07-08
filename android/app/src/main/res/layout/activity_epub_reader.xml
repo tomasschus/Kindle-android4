@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/epub_reader_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <WebView
+        android:id="@+id/web_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Top bar: back + prev/next chapter + chapter indicator -->
+    <LinearLayout
+        android:id="@+id/top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@color/reader_toolbar_bg"
+        android:paddingLeft="@dimen/spacing_small"
+        android:paddingRight="@dimen/spacing_small"
+        android:minHeight="@dimen/touch_target_min">
+
+        <Button
+            android:id="@+id/btn_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/touch_target_min"
+            android:minHeight="@dimen/touch_target_min"
+            android:background="@android:color/transparent"
+            android:textColor="@color/white"
+            android:text="&#8592;" />
+
+        <Button
+            android:id="@+id/btn_prev_chapter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/touch_target_min"
+            android:minHeight="@dimen/touch_target_min"
+            android:background="@android:color/transparent"
+            android:textColor="@color/white"
+            android:text="&#8249;" />
+
+        <TextView
+            android:id="@+id/text_page_indicator"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="@dimen/text_medium" />
+
+        <Button
+            android:id="@+id/btn_next_chapter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minWidth="@dimen/touch_target_min"
+            android:minHeight="@dimen/touch_target_min"
+            android:background="@android:color/transparent"
+            android:textColor="@color/white"
+            android:text="&#8250;" />
+
+    </LinearLayout>
+
+    <!-- Bottom toolbar: reading mode + fullscreen (no highlighting for EPUB in v1) -->
+    <LinearLayout
+        android:id="@+id/bottom_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/reader_toolbar_height"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:background="@color/reader_toolbar_bg">
+
+        <ToggleButton
+            android:id="@+id/btn_mode_light"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/mode_light"
+            android:textOff="@string/mode_light"
+            android:checked="true" />
+
+        <ToggleButton
+            android:id="@+id/btn_mode_dark"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/mode_dark"
+            android:textOff="@string/mode_dark" />
+
+        <ToggleButton
+            android:id="@+id/btn_mode_gray"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/mode_gray"
+            android:textOff="@string/mode_gray" />
+
+        <ToggleButton
+            android:id="@+id/btn_fullscreen"
+            style="@style/ToolbarIconButton"
+            android:textOn="@string/action_fullscreen"
+            android:textOff="@string/action_fullscreen" />
+
+    </LinearLayout>
+
+</FrameLayout>

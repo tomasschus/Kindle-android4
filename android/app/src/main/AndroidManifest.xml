@@ -36,5 +36,11 @@
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@style/AppTheme.Reader" />
 
+        <activity
+            android:name=".ui.EpubReaderActivity"
+            android:label="@string/title_reader"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:theme="@style/AppTheme.Reader" />
+
     </application>
 </manifest>

@@ -44,6 +44,7 @@
     <string name="highlight_saved">Highlight saved</string>
     <string name="highlight_deleted">Highlight removed</string>
     <string name="error_open_pdf">Could not open PDF: %1$s</string>
+    <string name="error_open_epub">Could not open EPUB: %1$s</string>
     <string name="highlight_mode_hint">Drag on the page to draw a highlight</string>
     <string name="action_delete_highlight">Delete highlight</string>
     <string name="action_pick_color">Highlight color</string>

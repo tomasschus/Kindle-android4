@@ -9,6 +9,7 @@ import com.kindlereader.app.data.Document;
 import com.kindlereader.app.data.Highlight;
 import com.kindlereader.app.data.HighlightRect;
 import com.kindlereader.app.data.Progress;
+import com.kindlereader.app.epub.EpubParser;
 import com.kindlereader.app.util.IsoDate;
 import com.kindlereader.app.util.Prefs;
 import com.kindlereader.app.util.Sha256;
@@ -178,6 +179,7 @@ public class SyncManager {
             d.sizeBytes = o.optLong("sizeBytes", 0);
             d.pageCount = o.isNull("pageCount") ? null : Integer.valueOf(o.optInt("pageCount"));
             d.checksum = o.optString("checksum", "");
+            d.epubStatus = o.isNull("epubStatus") ? null : o.optString("epubStatus", null);
             d.createdAt = o.optString("createdAt", null);
             d.updatedAt = o.optString("updatedAt", null);
             db.upsertDocument(d);
@@ -192,6 +194,9 @@ public class SyncManager {
             Document existing = db.getDocument(id);
             if (existing != null && existing.localPath != null) {
                 new File(existing.localPath).delete();
+                if (existing.isEpub()) {
+                    EpubParser.deleteRecursive(epubExtractDir(id));
+                }
             }
             db.deleteDocument(id);
         }
@@ -243,9 +248,11 @@ public class SyncManager {
         List<Document> toDownload = new ArrayList<Document>();
         for (int i = 0; i < all.size(); i++) {
             Document d = all.get(i);
+            // `checksum` is always the sha256 of the original PDF, even for
+            // documents we actually download as EPUB (see isEpub()), so it
+            // can't be used to detect staleness there -- just download once.
             boolean needsDownload = !d.isDownloaded()
-                    || d.localChecksum == null
-                    || !d.localChecksum.equals(d.checksum);
+                    || (!d.isEpub() && (d.localChecksum == null || !d.localChecksum.equals(d.checksum)));
             if (needsDownload) {
                 toDownload.add(d);
             }
@@ -258,15 +265,25 @@ public class SyncManager {
     private void downloadOne(final Document d, final SyncListener listener) {
         db.updateDownloadState(d.id, Document.STATUS_DOWNLOADING, 0, null, null);
         File dir = new File(appContext.getFilesDir(), "documents");
-        final File dest = new File(dir, d.id + ".pdf");
+        final File dest = new File(dir, d.id + (d.isEpub() ? ".epub" : ".pdf"));
         try {
-            api.downloadDocument(d.id, dest, 0, new ApiClient.DownloadProgressListener() {
+            ApiClient.DownloadProgressListener progressListener = new ApiClient.DownloadProgressListener() {
                 @Override
                 public void onProgress(long bytesRead, long totalBytes) {
                     int pct = totalBytes > 0 ? (int) (bytesRead * 100 / totalBytes) : 0;
                     db.updateDownloadState(d.id, Document.STATUS_DOWNLOADING, pct, null, null);
                 }
-            });
+            };
+            if (d.isEpub()) {
+                api.downloadEpub(d.id, dest, 0, progressListener);
+            } else {
+                api.downloadDocument(d.id, dest, 0, progressListener);
+            }
+            if (d.isEpub()) {
+                // Unzipped once here (not lazily in the reader) so a stale
+                // extraction never lingers around a re-download.
+                EpubParser.extract(dest, epubExtractDir(d.id));
+            }
             String actualChecksum = null;
             try {
                 actualChecksum = Sha256.hexOf(dest);
@@ -279,7 +296,16 @@ public class SyncManager {
         } catch (ApiException e) {
             db.updateDownloadState(d.id, Document.STATUS_FAILED, 0, null, null);
             notifyDownloaded(listener, d.id, false);
+        } catch (java.io.IOException e) {
+            // Extraction failure: treat like any other failed download so the
+            // user sees a retry-able "failed" state instead of a broken open.
+            db.updateDownloadState(d.id, Document.STATUS_FAILED, 0, null, null);
+            notifyDownloaded(listener, d.id, false);
         }
+    }
+
+    private File epubExtractDir(String documentId) {
+        return new File(new File(appContext.getFilesDir(), "documents"), documentId + "_epub");
     }
 
     private void notifyDownloaded(final SyncListener listener, final String id, final boolean success) {

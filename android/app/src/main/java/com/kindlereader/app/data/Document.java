@@ -18,6 +18,7 @@ public class Document {
     public long sizeBytes;
     public Integer pageCount; // null-able, matches API contract
     public String checksum;
+    public String epubStatus; // "ready" | "failed" | null -- server-side PDF->EPUB conversion state
     public String createdAt;
     public String updatedAt;
 
@@ -30,5 +31,14 @@ public class Document {
 
     public boolean isDownloaded() {
         return STATUS_DOWNLOADED.equals(downloadStatus) && localPath != null;
+    }
+
+    /**
+     * True when the server has a ready-made EPUB conversion of this (still
+     * PDF-named) document -- in which case we download and read that instead
+     * of the original PDF, via the reflowable WebView-based reader.
+     */
+    public boolean isEpub() {
+        return "ready".equals(epubStatus);
     }
 }

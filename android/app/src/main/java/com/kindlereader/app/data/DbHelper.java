@@ -17,7 +17,7 @@ import java.util.List;
 public class DbHelper extends SQLiteOpenHelper {
 
     private static final String DB_NAME = "kindlereader.db";
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
 
     private static final String T_DOCUMENTS = "documents";
     private static final String T_HIGHLIGHTS = "highlights";
@@ -52,7 +52,8 @@ public class DbHelper extends SQLiteOpenHelper {
                 "local_checksum TEXT," +
                 "download_status TEXT," +
                 "download_progress INTEGER DEFAULT 0," +
-                "last_read_page INTEGER DEFAULT 0" +
+                "last_read_page INTEGER DEFAULT 0," +
+                "epub_status TEXT" +
                 ")");
 
         db.execSQL("CREATE TABLE " + T_HIGHLIGHTS + " (" +
@@ -84,7 +85,9 @@ public class DbHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // v1 is the first schema version; nothing to migrate yet.
+        if (oldVersion < 2) {
+            db.execSQL("ALTER TABLE " + T_DOCUMENTS + " ADD COLUMN epub_status TEXT");
+        }
     }
 
     // ----------------------------------------------------------------------
@@ -126,6 +129,7 @@ public class DbHelper extends SQLiteOpenHelper {
         cv.put("size_bytes", d.sizeBytes);
         cv.put("page_count", d.pageCount == null ? null : d.pageCount);
         cv.put("checksum", d.checksum);
+        cv.put("epub_status", d.epubStatus);
         cv.put("created_at", d.createdAt);
         cv.put("updated_at", d.updatedAt);
         if (existing != null) {
@@ -207,6 +211,7 @@ public class DbHelper extends SQLiteOpenHelper {
         int pageCountIdx = c.getColumnIndexOrThrow("page_count");
         d.pageCount = c.isNull(pageCountIdx) ? null : Integer.valueOf(c.getInt(pageCountIdx));
         d.checksum = c.getString(c.getColumnIndexOrThrow("checksum"));
+        d.epubStatus = c.getString(c.getColumnIndexOrThrow("epub_status"));
         d.createdAt = c.getString(c.getColumnIndexOrThrow("created_at"));
         d.updatedAt = c.getString(c.getColumnIndexOrThrow("updated_at"));
         d.localPath = c.getString(c.getColumnIndexOrThrow("local_path"));

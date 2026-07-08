@@ -29,17 +29,28 @@ Response 200: `{ "documents": Document[] }`
 Document = {
   id: string
   title: string
-  filename: string
+  filename: string          // always the original PDF's filename, even when epubStatus is "ready"
   sizeBytes: number
   pageCount: number | null
-  checksum: string        // sha256 hex of the file, used by Android to skip re-download
-  createdAt: string        // ISO 8601
+  checksum: string          // sha256 hex of the *PDF*, used by Android to skip re-download
+  epubStatus: "ready" | "failed" | null | undefined
+  createdAt: string         // ISO 8601
   updatedAt: string
 }
 ```
 
+Every document is a PDF at upload time; `epubStatus` reflects an optional
+server-side best-effort PDF->EPUB text conversion (see `lib/epub.ts`),
+requested per-upload via `convertToEpub`. The Android app treats
+`epubStatus === "ready"` as "download and read the EPUB instead of the PDF"
+(reflowable WebView reader) and anything else as a normal PDF. `pageCount`
+and `checksum` describe the PDF regardless of `epubStatus` -- Android doesn't
+have a way to detect the EPUB itself changing after the fact, so don't
+regenerate/replace `epubKey` for an existing document id.
+
 ### POST /api/documents  (multipart/form-data)
-Fields: `file` (the PDF), `title` (string, optional — defaults to filename)
+Fields: `file` (the PDF), `title` (string, optional — defaults to filename),
+`convertToEpub` (`"true"` to also generate the EPUB conversion)
 Response 201: `Document`
 
 ### DELETE /api/documents/:id
@@ -50,11 +61,18 @@ Streams the raw PDF bytes. Supports `Range` requests (needed for large PDFs
 on a slow tablet connection / resuming interrupted downloads).
 Headers: `Content-Type: application/pdf`, `Content-Length`, `Accept-Ranges: bytes`.
 
+### GET /api/documents/:id/epub
+Streams the converted EPUB. 404s (`epub_not_available`) unless `epubStatus`
+is `"ready"`. No `Range` support -- Android always does a plain full
+download for this one.
+Headers: `Content-Type: application/epub+zip`, `Content-Length`.
+
 ## Highlights
 
 Highlights are stored as one or more normalized rectangles per page
 (normalized to 0..1 of page width/height so they survive different render
-resolutions).
+resolutions). PDF-only for now -- the Android EPUB reader doesn't create
+highlights (rectangle coordinates don't mean anything on reflowable text).
 
 ```
 Highlight = {
@@ -86,6 +104,10 @@ Soft-deletes (tombstone) so other devices can sync the deletion.
 Response 204.
 
 ## Reading progress
+
+For EPUBs, `page` is the 0-indexed spine (chapter) position, not a real page
+number -- there's no fixed pagination on reflowable text, so this is
+chapter-level granularity only.
 
 ```
 Progress = { documentId: string, page: number, updatedAt: string }

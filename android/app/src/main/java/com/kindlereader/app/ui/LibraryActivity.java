@@ -121,6 +121,12 @@ public class LibraryActivity extends AppCompatActivity {
             Toast.makeText(this, R.string.status_not_downloaded, Toast.LENGTH_SHORT).show();
             return;
         }
+        if (doc.isEpub()) {
+            Intent intent = new Intent(this, EpubReaderActivity.class);
+            intent.putExtra(EpubReaderActivity.EXTRA_DOCUMENT_ID, doc.id);
+            startActivity(intent);
+            return;
+        }
         Intent intent = new Intent(this, ReaderActivity.class);
         intent.putExtra(ReaderActivity.EXTRA_DOCUMENT_ID, doc.id);
         startActivity(intent);

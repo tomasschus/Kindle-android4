@@ -191,12 +191,29 @@ public class ApiClient {
     }
 
     /**
-     * Downloads a document to {@code dest}, supporting resume via HTTP Range
-     * when {@code resumeFromBytes > 0}. Reports progress via {@code listener}.
+     * Downloads a document's original PDF to {@code dest}, supporting resume
+     * via HTTP Range when {@code resumeFromBytes > 0}. Reports progress via
+     * {@code listener}.
      */
     public void downloadDocument(String documentId, File dest, long resumeFromBytes, DownloadProgressListener listener)
             throws ApiException {
-        Request.Builder rb = authedRequest("/api/documents/" + documentId + "/download").get();
+        downloadToFile("/api/documents/" + documentId + "/download", dest, resumeFromBytes, listener);
+    }
+
+    /**
+     * Downloads the server-side PDF->EPUB conversion of a document (see
+     * Document.epubStatus). The endpoint doesn't support Range requests, but
+     * this still works correctly when resuming: the shared download logic
+     * detects the non-206 response and restarts from scratch.
+     */
+    public void downloadEpub(String documentId, File dest, long resumeFromBytes, DownloadProgressListener listener)
+            throws ApiException {
+        downloadToFile("/api/documents/" + documentId + "/epub", dest, resumeFromBytes, listener);
+    }
+
+    private void downloadToFile(String path, File dest, long resumeFromBytes, DownloadProgressListener listener)
+            throws ApiException {
+        Request.Builder rb = authedRequest(path).get();
         boolean resuming = resumeFromBytes > 0 && dest.exists();
         if (resuming) {
             rb.header("Range", "bytes=" + resumeFromBytes + "-");
