@@ -60,7 +60,8 @@ export async function POST(request: NextRequest) {
         epubKey = `${userId}/${randomUUID()}.epub`;
         await putObject(epubKey, Readable.from(epubBuffer), "application/epub+zip");
         epubStatus = "ready";
-      } catch {
+      } catch (err) {
+        console.error("PDF -> EPUB conversion failed:", err);
         epubStatus = "failed";
       }
     } else {
