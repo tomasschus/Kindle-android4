@@ -111,28 +111,28 @@ export function Dashboard({ username }: { username: string }) {
             <h1 className="text-xl font-semibold text-primary dark:text-blue-300">Biblioteca PDF</h1>
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Conectado como {username}</p>
           </div>
-          <button
-            onClick={onLogout}
-            className="rounded-lg border border-blue-200 px-3 py-1.5 text-sm text-primary hover:bg-blue-100 dark:border-slate-700 dark:text-blue-300 dark:hover:bg-slate-900"
-          >
-            Cerrar sesión
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setModalOpen(true)}
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+            >
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              </svg>
+              Subir nuevo libro
+            </button>
+            <button
+              onClick={onLogout}
+              className="rounded-lg border border-blue-200 px-3 py-1.5 text-sm text-primary hover:bg-blue-100 dark:border-slate-700 dark:text-blue-300 dark:hover:bg-slate-900"
+            >
+              Cerrar sesión
+            </button>
+          </div>
         </header>
 
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            {documents ? `${documents.length} libro${documents.length === 1 ? "" : "s"}` : "Tu biblioteca"}
-          </h2>
-          <button
-            onClick={() => setModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
-          >
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
-              <path d="M10 4v12M4 10h12" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-            </svg>
-            Subir nuevo libro
-          </button>
-        </div>
+        <h2 className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
+          {documents ? `${documents.length} libro${documents.length === 1 ? "" : "s"}` : "Tu biblioteca"}
+        </h2>
 
         {notice && (
           <p className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700 dark:border-green-900 dark:bg-green-950 dark:text-green-300">
