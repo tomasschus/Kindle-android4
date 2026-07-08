@@ -1,0 +1,5 @@
+# Generated Garage config with real secrets — see infra/generate-secrets.sh
+infra/garage.toml
+
+# OS cruft
+.DS_Store

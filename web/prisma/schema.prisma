@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  documents  Document[]
+  highlights Highlight[]
+  progress   ReadingProgress[]
+}
+
+model Document {
+  id         String   @id @default(cuid())
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  title      String
+  filename   String
+  s3Key      String
+  sizeBytes  Int
+  pageCount  Int?
+  checksum   String
+  deletedAt  DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  highlights Highlight[]
+  progress   ReadingProgress[]
+
+  @@index([ownerId])
+  @@index([ownerId, updatedAt])
+}
+
+model Highlight {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  page       Int
+  rects      Json
+  color      String   @default("#ffeb3b")
+  note       String?
+  deleted    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([documentId])
+  @@index([ownerId, updatedAt])
+}
+
+model ReadingProgress {
+  id         String   @id @default(cuid())
+  documentId String
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  ownerId    String
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  page       Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@unique([documentId, ownerId])
+  @@index([ownerId, updatedAt])
+}
