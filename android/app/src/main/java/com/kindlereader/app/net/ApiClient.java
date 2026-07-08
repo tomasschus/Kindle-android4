@@ -3,6 +3,7 @@ package com.kindlereader.app.net;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.kindlereader.app.R;
 import com.kindlereader.app.util.Prefs;
 
 import org.json.JSONException;
@@ -13,14 +14,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.security.KeyStore;
+import java.security.cert.Certificate;
+import java.security.cert.CertificateFactory;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.TrustManagerFactory;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.ConnectionSpec;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import okhttp3.TlsVersion;
 
 /**
  * Thin synchronous REST client for the API described in docs/API.md.
@@ -39,11 +51,84 @@ public class ApiClient {
 
     public ApiClient(Context context) {
         this.prefs = new Prefs(context);
-        this.http = new OkHttpClient.Builder()
+        OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
-                .build();
+                .writeTimeout(60, TimeUnit.SECONDS);
+        configureTls(context, builder);
+        this.http = builder.build();
+    }
+
+    /**
+     * Two fixes needed for TLS to work against a modern server on Android
+     * API 16-19:
+     *
+     * 1. TLSv1.1/1.2 are supported by the provider but disabled by default,
+     *    so a plain OkHttpClient fails to negotiate with servers that
+     *    require TLS 1.2+ (see TlsSocketFactory).
+     * 2. These devices' trust stores predate Let's Encrypt's ISRG Root X1,
+     *    and the cross-signed intermediate that used to bridge the gap
+     *    expired in 2021, so the system trust manager alone can't validate
+     *    a Let's Encrypt chain. Fall back to a bundled copy of that root
+     *    (res/raw/isrgrootx1.pem) via CompositeTrustManager.
+     */
+    private static void configureTls(Context context, OkHttpClient.Builder builder) {
+        try {
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init((KeyStore) null);
+            X509TrustManager systemTrustManager = firstX509(tmf.getTrustManagers());
+            if (systemTrustManager == null) {
+                return;
+            }
+
+            X509TrustManager trustManager = systemTrustManager;
+            X509TrustManager pinnedRootTrustManager = loadPinnedRootTrustManager(context);
+            if (pinnedRootTrustManager != null) {
+                trustManager = new CompositeTrustManager(systemTrustManager, pinnedRootTrustManager);
+            }
+
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, new TrustManager[]{trustManager}, null);
+
+            builder.sslSocketFactory(new TlsSocketFactory(sslContext.getSocketFactory()), trustManager);
+            builder.connectionSpecs(Arrays.asList(
+                    new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
+                            .tlsVersions(TlsVersion.TLS_1_2, TlsVersion.TLS_1_1, TlsVersion.TLS_1_0)
+                            .build(),
+                    ConnectionSpec.CLEARTEXT));
+        } catch (Exception e) {
+            // Fall back to OkHttp's default TLS handling if anything above
+            // is unavailable on this device/provider.
+        }
+    }
+
+    private static X509TrustManager loadPinnedRootTrustManager(Context context) {
+        InputStream in = null;
+        try {
+            in = context.getResources().openRawResource(R.raw.isrgrootx1);
+            Certificate cert = CertificateFactory.getInstance("X.509").generateCertificate(in);
+
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+            keyStore.setCertificateEntry("isrgrootx1", cert);
+
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+            tmf.init(keyStore);
+            return firstX509(tmf.getTrustManagers());
+        } catch (Exception e) {
+            return null;
+        } finally {
+            closeQuietly(in);
+        }
+    }
+
+    private static X509TrustManager firstX509(TrustManager[] trustManagers) {
+        for (TrustManager tm : trustManagers) {
+            if (tm instanceof X509TrustManager) {
+                return (X509TrustManager) tm;
+            }
+        }
+        return null;
     }
 
     private String baseUrl() {
