@@ -55,7 +55,7 @@ public class LoginActivity extends AppCompatActivity {
         // framework ImageView constructor resolves android:src itself before
         // AppCompat's vector-drawable-compat can intercept it, crashing on
         // inflate. setImageResource() goes through the compat path instead.
-        btnTogglePassword.setImageResource(R.drawable.ic_eye);
+        btnTogglePassword.setImageResource(R.drawable.ic_eye_off);
 
         btnLogin.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -79,7 +79,7 @@ public class LoginActivity extends AppCompatActivity {
         editPassword.setInputType(InputType.TYPE_CLASS_TEXT | (passwordVisible
                 ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
                 : InputType.TYPE_TEXT_VARIATION_PASSWORD));
-        btnTogglePassword.setImageResource(passwordVisible ? R.drawable.ic_eye_off : R.drawable.ic_eye);
+        btnTogglePassword.setImageResource(passwordVisible ? R.drawable.ic_eye : R.drawable.ic_eye_off);
         btnTogglePassword.setContentDescription(getString(passwordVisible
                 ? R.string.action_hide_password
                 : R.string.action_show_password));
