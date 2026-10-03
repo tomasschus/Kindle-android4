@@ -99,6 +99,7 @@ per highlight -- never both.
 Highlight = {
   id: string
   documentId: string
+  clientId: string | null            // stable offline id, scoped to owner
   page: number                      // PDF page, or EPUB chapter/spine index
   rects: { x: number, y: number, w: number, h: number }[]  // [] for EPUB
   anchorQuote: string | null         // EPUB only
@@ -116,13 +117,19 @@ Highlight = {
 Response 200: `{ "highlights": Highlight[] }`
 
 ### POST /api/documents/:id/highlights
-Request: `{ page, rects, color, note?, anchorQuote?, anchorPrefix?, anchorSuffix? }`
+Request: `{ page, rects, color?, note?, clientId?, anchorQuote?, anchorPrefix?, anchorSuffix? }`
 `rects` is always sent (possibly `[]`); `anchorQuote`/`anchorPrefix`/
 `anchorSuffix` are only present for EPUB highlights.
 Response 201: `Highlight`
 
+`clientId`, when supplied, is `local-<UUID>`. Repeating the same owner/clientId
+returns the existing row without changing it, including deleted rows. This
+prevents duplicates after a lost response. Android keeps its local id stable
+and stores the returned server id separately. Exactly one anchoring scheme
+must remain valid on create and update; invalid/mixed anchors return 400.
+
 ### PUT /api/highlights/:id
-Request: partial `{ rects?, color?, note? }` (Android never updates the
+Request: partial `{ rects?, color?, note?, anchorQuote?, anchorPrefix?, anchorSuffix? }` (Android never updates the
 anchor fields after creation)
 Response 200: `Highlight`
 
@@ -137,15 +144,23 @@ number -- there's no fixed pagination on reflowable text, so this is
 chapter-level granularity only.
 
 ```
-Progress = { documentId: string, page: number, updatedAt: string }
+Progress = { documentId: string, format: "pdf" | "epub", page: number, updatedAt: string }
 ```
 
-### GET /api/documents/:id/progress
+### GET /api/documents/:id/progress?format=pdf|epub
 Response 200: `Progress | null`
 
 ### PUT /api/documents/:id/progress
-Request: `{ page: number }`
+Request: `{ page: number, format?: "pdf" | "epub" }`
 Response 200: `Progress`
+
+PDF page and EPUB chapter positions are independent. If an old client omits
+`format`, it defaults to EPUB when `epubStatus` is `ready`, and PDF otherwise.
+The migration assigns existing progress to that same primary format; old
+records did not identify which reader originally wrote the position, so
+positions written after manually switching formats cannot be recovered with
+certainty. New clients always send the explicit format. `/api/sync` returns
+both format records when they change.
 
 ## Incremental sync (used by the Android app)
 

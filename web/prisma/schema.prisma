@@ -49,6 +49,10 @@ model Highlight {
   owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   page       Int
   rects      Json
+  clientId   String?
+  anchorQuote String?
+  anchorPrefix String?
+  anchorSuffix String?
   color      String   @default("#ffeb3b")
   note       String?
   deleted    Boolean  @default(false)
@@ -56,6 +60,7 @@ model Highlight {
   updatedAt  DateTime @updatedAt
 
   @@index([documentId])
+  @@unique([ownerId, clientId])
   @@index([ownerId, updatedAt])
 }
 
@@ -66,8 +71,9 @@ model ReadingProgress {
   ownerId    String
   owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   page       Int      @default(0)
+  format     String   @default("pdf")
   updatedAt  DateTime @updatedAt
 
-  @@unique([documentId, ownerId])
+  @@unique([documentId, ownerId, format])
   @@index([ownerId, updatedAt])
 }

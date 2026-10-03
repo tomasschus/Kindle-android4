@@ -1,6 +1,6 @@
 # Biblioteca PDF — web platform
 
-Next.js app for uploading PDFs and managing your personal library. Postgres
+Next.js app for uploading PDFs/EPUBs and managing your personal library. Postgres
 (via Prisma) stores metadata/highlights/progress; the PDF bytes themselves
 live in [Garage](https://garagehq.deuxfleurs.fr/) (S3-compatible object
 storage). See `../docs/API.md` for the full REST contract the Android app
@@ -50,6 +50,27 @@ prisma/schema.prisma    User / Document / Highlight / ReadingProgress models
 - `Highlight.rects` stores normalized (0..1) rectangles per page so
   highlights survive being re-rendered at a different zoom/resolution on the
   Android app.
+
+- EPUB highlights instead store `anchorQuote`, `anchorPrefix` and
+  `anchorSuffix`, with an empty rectangle list. `clientId` is unique per
+  owner and makes creation retries idempotent, including tombstones.
+- Reading progress is unique per document, owner and `format` (`pdf` or
+  `epub`), so switching readers cannot overwrite the other format's place.
+
+## Reader sync update
+
+Run `npx prisma generate` and `npx prisma migrate deploy` before starting
+the updated server. Migration `20261003000000_reader_sync` adds text anchors,
+idempotency keys and progress by format. Existing progress is assigned to the
+document's primary format; previous clients did not persist the format.
+Deploy the updated API before distributing the new Android APK.
+
+`npm test` runs nine HTTP contract tests using the real handlers and JWT
+authentication with in-memory persistence. They cover EPUB/PDF validation,
+round-trip anchors, retry/tombstone behavior, edits, ownership checks and
+independent progress. They do not exercise a real Postgres/S3 deployment.
+The SQL migration was additionally exercised against an isolated PostgreSQL
+engine (PGlite), preserving old positions and checking both unique indexes.
 
 ## Testing performed during development
 

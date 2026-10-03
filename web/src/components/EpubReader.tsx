@@ -20,7 +20,7 @@ export function EpubReader({ documentId, title }: { documentId: string; title: s
       try {
         const [epubRes, progressRes] = await Promise.all([
           fetch(`/api/documents/${documentId}/epub`),
-          fetch(`/api/documents/${documentId}/progress`),
+          fetch(`/api/documents/${documentId}/progress?format=epub`),
         ]);
         if (!epubRes.ok) throw new Error("No se pudo descargar el EPUB.");
         const buffer = await epubRes.arrayBuffer();
@@ -45,7 +45,7 @@ export function EpubReader({ documentId, title }: { documentId: string; title: s
           fetch(`/api/documents/${documentId}/progress`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ page: location.start.index }),
+            body: JSON.stringify({ page: location.start.index, format: "epub" }),
           }).catch(() => {});
         });
 

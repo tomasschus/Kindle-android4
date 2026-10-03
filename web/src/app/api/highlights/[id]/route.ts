@@ -1,21 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { updateHighlightSchema, validHighlightAnchor } from "@/lib/reader-validation";
 import { prisma } from "@/lib/prisma";
 import { AuthError, jsonError, requireUserId } from "@/lib/http";
 import { serializeHighlight } from "@/lib/serialize";
-
-const rectSchema = z.object({
-  x: z.number().min(0).max(1),
-  y: z.number().min(0).max(1),
-  w: z.number().min(0).max(1),
-  h: z.number().min(0).max(1),
-});
-
-const updateSchema = z.object({
-  rects: z.array(rectSchema).min(1).optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
-  note: z.string().max(2000).nullish(),
-});
 
 export async function PUT(
   request: NextRequest,
@@ -27,8 +14,10 @@ export async function PUT(
     const existing = await prisma.highlight.findFirst({ where: { id, ownerId: userId } });
     if (!existing) return jsonError(404, "not_found");
 
-    const parsed = updateSchema.safeParse(await request.json().catch(() => null));
+    const parsed = updateHighlightSchema.safeParse(await request.json().catch(() => null));
     if (!parsed.success) return jsonError(400, "invalid_body");
+    if (existing.deleted) return jsonError(409, "highlight_deleted");
+    if (!validHighlightAnchor({ ...existing, ...parsed.data })) return jsonError(400, "invalid_anchor");
 
     const highlight = await prisma.highlight.update({
       where: { id: existing.id },

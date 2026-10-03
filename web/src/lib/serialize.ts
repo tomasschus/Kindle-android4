@@ -21,6 +21,10 @@ export function serializeHighlight(h: Highlight) {
     documentId: h.documentId,
     page: h.page,
     rects: h.rects,
+    clientId: h.clientId,
+    anchorQuote: h.anchorQuote,
+    anchorPrefix: h.anchorPrefix,
+    anchorSuffix: h.anchorSuffix,
     color: h.color,
     note: h.note,
     createdAt: h.createdAt,
@@ -33,6 +37,7 @@ export function serializeProgress(p: ReadingProgress) {
   return {
     documentId: p.documentId,
     page: p.page,
+    format: p.format,
     updatedAt: p.updatedAt,
   };
 }
